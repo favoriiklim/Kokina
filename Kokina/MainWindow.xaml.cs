@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -8,12 +8,14 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+
 namespace KokinaWidget
 {
     public partial class MainWindow : Window
     {
-        //this list for leaves DO NOT DELETE AMK
+        // Leaf list for animation tracking
         private List<Grid> leaves = new List<Grid>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -21,122 +23,124 @@ namespace KokinaWidget
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            PozisyonuAyarla();
+            AdjustPosition();
 
-            // Sol Dallar İçin
-            YaprakEkle(30, 180, -70, 0.7);
-            YaprakEkle(30, 130, -45, 0.9);
-            YaprakEkle(76, 130, -45, 0.9);
-            YaprakEkle(71, 160, 40, 0.8);
-            YaprakEkle(100, 80, 30, 0.8);
-            YaprakEkle(108, 110, 30, 0.8);
+            // Left Branches
+            AddLeaf(30, 180, -70, 0.7);
+            AddLeaf(30, 130, -45, 0.9);
+            AddLeaf(76, 130, -45, 0.9);
+            AddLeaf(71, 160, 40, 0.8);
+            AddLeaf(100, 80, 30, 0.8);
+            AddLeaf(108, 110, 30, 0.8);
 
-            // Sağ Dallar İçin
-            YaprakEkle(225, 140, -30, 0.9);
-            YaprakEkle(247, 100, -10, 0.9);
-            YaprakEkle(265, 120, 45, 0.8);
-            YaprakEkle(295, 190, 70, 0.7);
-            YaprakEkle(310, 160, 60, 0.8);
+            // Right Branches
+            AddLeaf(225, 140, -30, 0.9);
+            AddLeaf(247, 100, -10, 0.9);
+            AddLeaf(265, 120, 45, 0.8);
+            AddLeaf(295, 190, 70, 0.7);
+            AddLeaf(310, 160, 60, 0.8);
 
-            // Orta Dallar İçin
-            YaprakEkle(170, 35, 0, 1.0);
-            YaprakEkle(180, 55, 20, 0.8);
-            YaprakEkle(158, 75, -30, 0.9);
-            YaprakEkle(154, 110, -35, 0.9);
-            YaprakEkle(192, 110, 45, 1.0);
-            YaprakEkle(143, 130, -65, 1.0);
-            YaprakEkle(192, 150, 60, 1.0);
+            // Middle Branches
+            AddLeaf(170, 35, 0, 1.0);
+            AddLeaf(180, 55, 20, 0.8);
+            AddLeaf(158, 75, -30, 0.9);
+            AddLeaf(154, 110, -35, 0.9);
+            AddLeaf(192, 110, 45, 1.0);
+            AddLeaf(143, 130, -65, 1.0);
+            AddLeaf(192, 150, 60, 1.0);
 
-            // Alt kısımlar
-            YaprakEkle(105, 220, -50, 0.7);
-            YaprakEkle(235, 220, 50, 0.7);
-            YaprakEkle(192, 220, 50, 0.3);
-            AnimasyonuOynat();
+            // Lower Sections
+            AddLeaf(105, 220, -50, 0.7);
+            AddLeaf(235, 220, 50, 0.7);
+            AddLeaf(192, 220, 50, 0.3);
+
+            PlayAnimation();
         }
-        private void YaprakEkle(double x, double y, double aci, double boyut)
+
+        private void AddLeaf(double x, double y, double angle, double scale)
         {
-            // 1. Grup Oluştur
+            // 1. Create Group
             Grid leafGroup = new Grid();
             leafGroup.Width = 40;
             leafGroup.Height = 60;
             leafGroup.RenderTransformOrigin = new Point(0.5, 0.5);
 
-            // 2. Yaprak Gövdesi
-            Path govde = new Path();
-            govde.Stroke = new SolidColorBrush(Color.FromRgb(0, 77, 0));
-            govde.StrokeThickness = 1;
-            // XAML'daki kaynağı kullanıyoruz
+            // 2. Leaf Body
+            Path body = new Path();
+            body.Stroke = new SolidColorBrush(Color.FromRgb(0, 77, 0));
+            body.StrokeThickness = 1;
+            
+            // Using the resource defined in XAML
             if (TryFindResource("LeafLive") is Brush leafBrush)
-                govde.Fill = leafBrush;
+                body.Fill = leafBrush;
             else
-                govde.Fill = Brushes.Green; // Kaynak bulunamazsa yeşil yap
+                body.Fill = Brushes.Green; // Fallback to green if resource not found
 
-            // Normalize edilmiş (merkeze yakın) yaprak verisi
-            govde.Data = Geometry.Parse("M 20,60 C 0,40 10,20 20,0 C 30,20 40,40 20,60 Z");
+            // Normalized leaf path data
+            body.Data = Geometry.Parse("M 20,60 C 0,40 10,20 20,0 C 30,20 40,40 20,60 Z");
 
-            // 3. Damar
-            Path damar = new Path();
+            // 3. Vein
+            Path vein = new Path();
             if (TryFindResource("LeafVeinBrush") is Brush veinBrush)
-                damar.Stroke = veinBrush;
+                vein.Stroke = veinBrush;
             else
-                damar.Stroke = Brushes.LightGreen;
+                vein.Stroke = Brushes.LightGreen;
 
-            damar.StrokeThickness = 1;
-            damar.Data = Geometry.Parse("M 20,58 L 20,5");
-            damar.Opacity = 0.5;
-            leafGroup.Children.Add(govde);
-            leafGroup.Children.Add(damar);
+            vein.StrokeThickness = 1;
+            vein.Data = Geometry.Parse("M 20,58 L 20,5");
+            vein.Opacity = 0.5;
+            
+            leafGroup.Children.Add(body);
+            leafGroup.Children.Add(vein);
 
-            // 4. Transform Ayarları
+            // 4. Transform Settings
             TransformGroup tg = new TransformGroup();
-            // Animasyon Scale'i kontrol edeceği için burada 1 veriyoruz, animasyon 0 yapacak
-            tg.Children.Add(new ScaleTransform(boyut, boyut));
-            tg.Children.Add(new RotateTransform(aci));
+            // Initial scale set to 'scale', animation will handle the 0 to 1 transition
+            tg.Children.Add(new ScaleTransform(scale, scale));
+            tg.Children.Add(new RotateTransform(angle));
             leafGroup.RenderTransform = tg;
 
-            // 5. Konumlandır
+            // 5. Position
             Canvas.SetLeft(leafGroup, x);
             Canvas.SetTop(leafGroup, y);
 
-            // 6. Ekrana (Canvas'a) Ekle
-            // XAML'da <Canvas x:Name="LeafLayer"/> olduğundan emin ol
+            // 6. Add to Canvas
+            // Ensure <Canvas x:Name="LeafLayer"/> exists in XAML
             LeafLayer.Children.Add(leafGroup);
 
-            // 7. LİSTEYE EKLE (Animasyon için kritik)
+            // 7. Add to list (Critical for animation)
             leaves.Add(leafGroup);
         }
 
-        private void PozisyonuAyarla()
+        private void AdjustPosition()
         {
-            // Windows çalışma alanını al (Görev çubuğu hariç)
+            // Get desktop working area (excluding taskbar)
             var desktopWorkingArea = SystemParameters.WorkArea;
 
-            // Widget boyutlarımız (XAML'da 380x450 belirledik)
+            // Widget dimensions (Defined as 380x450 in XAML)
             double widgetWidth = this.Width;
             double widgetHeight = this.Height;
 
-            // SAATİN ÜSTÜNE KONUMLANDIRMA:
-            // Right: Ekranın en sağı - widget genişliği
-            this.Left = desktopWorkingArea.Right - widgetWidth + 20; // +20 sağa biraz taşırıp daha doğal durmasını sağlar
+            // POSITIONING ABOVE SYSTEM CLOCK:
+            // Right: Right edge of screen - widget width
+            this.Left = desktopWorkingArea.Right - widgetWidth + 20; // +20 slightly offsets to the right for a natural look
 
-            // Bottom: Ekranın en altı - widget yüksekliği
-            // +40 px aşağıya itiyorum ki kök kısmı ekranın dışından geliyormuş gibi dursun
+            // Bottom: Bottom edge of screen - widget height
+            // Offset downward by 40px so the root appears to grow from outside the screen
             this.Top = desktopWorkingArea.Bottom - widgetHeight + 40;
         }
-       
 
-        private void AnimasyonuOynat()
+        private void PlayAnimation()
         {
             StartBloom_NoStoryboard();
         }
-
 
         private void StartBloom_NoStoryboard()
         {
             var branches = FindName("Branches") as System.Windows.Shapes.Path;
             if (branches != null)
             {
-                // ---------- 1) DALLAR (Clip reveal) ----------
+                // ---------- 1) BRANCHES (Clip reveal) ----------
                 var pen = new Pen(branches.Stroke, branches.StrokeThickness);
                 var b = branches.Data.GetRenderBounds(pen);
 
@@ -147,7 +151,7 @@ namespace KokinaWidget
                     branches.Clip = clip;
                 }
 
-                // reset + stop previous anim
+                // Reset and stop previous animation
                 clip.BeginAnimation(RectangleGeometry.RectProperty, null);
                 clip.Rect = new Rect(b.Left, b.Bottom - 1, b.Width, 1);
 
@@ -162,7 +166,7 @@ namespace KokinaWidget
                 clip.BeginAnimation(RectangleGeometry.RectProperty, branchesAnim);
             }
 
-            // ---------- 2) YAPRAKLAR (Scale 0->1 sırayla) ----------
+            // ---------- 2) LEAVES (Scale 0->1 sequentially) ----------
             ScaleTransform EnsureLeafScale(UIElement leaf)
             {
                 leaf.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -184,7 +188,7 @@ namespace KokinaWidget
                     s.BeginAnimation(ScaleTransform.ScaleXProperty, null);
                     s.BeginAnimation(ScaleTransform.ScaleYProperty, null);
 
-                    // Animasyon öncesi sıfırla
+                    // Reset before animation
                     s.ScaleX = 0; s.ScaleY = 0;
                     return s;
                 }
@@ -204,12 +208,12 @@ namespace KokinaWidget
                 return sOnly2;
             }
 
-            // LİSTEDEKİ HER YAPRAK İÇİN ANİMASYON
+            // ANIMATION FOR EACH LEAF IN LIST
             for (int i = 0; i < leaves.Count; i++)
             {
                 var s = EnsureLeafScale(leaves[i]);
 
-                // Senin orijinal zamanlama formülün
+                // Timing logic
                 var t0 = 700 + i * 120;
 
                 var ax = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260))
@@ -228,7 +232,7 @@ namespace KokinaWidget
             }
 
 
-            // ---------- 3) MEYVELER (Dark + 3D hepsi) ----------
+            // ---------- 3) BERRIES (Dark + 3D) ----------
             var berry3d = (Brush)FindResource("BerryBrush3D");
             var darkBerry = (Brush)FindResource("DarkBerryBrush");
 
@@ -238,7 +242,7 @@ namespace KokinaWidget
 
             foreach (var e in berries)
             {
-                // stop previous anim
+                // Stop previous animation
                 e.BeginAnimation(UIElement.OpacityProperty, null);
 
                 e.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -300,7 +304,7 @@ namespace KokinaWidget
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            AnimasyonuOynat();
+            PlayAnimation();
             // this.DragMove();
         }
 
